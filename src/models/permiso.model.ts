@@ -11,8 +11,9 @@ export class Permiso extends Entity {
 
   @property({
     type: 'string',
+    required: true,
   })
-  nombre?: string;
+  nombre: string;
 
   @property({
     type: 'string',
