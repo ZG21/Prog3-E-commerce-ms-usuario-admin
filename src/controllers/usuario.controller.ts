@@ -12,11 +12,12 @@ import {
   getModelSchemaRef, param, patch, post, put, requestBody,
   response
 } from '@loopback/rest';
-import {Usuario} from '../models';
+import {configuracion} from '../llaves/configuracion';
+import {NotificacionCorreo, Usuario} from '../models';
 import {CambioClave} from '../models/cambio-clave.model';
 import {Credenciales} from '../models/credenciales.model';
 import {UsuarioRepository} from '../repositories';
-import {AdministradorClavesService} from '../services';
+import {AdministradorClavesService, NotificacionesService} from '../services';
 
 export class UsuarioController {
   constructor(
@@ -24,6 +25,8 @@ export class UsuarioController {
     public usuarioRepository : UsuarioRepository,
     @service(AdministradorClavesService)
     public servicioClaves: AdministradorClavesService,
+    @service(NotificacionesService)
+    public servicioNotificaciones: NotificacionesService
   ) {}
 
   @post('/usuarios')
@@ -46,14 +49,18 @@ export class UsuarioController {
   ): Promise<Usuario> {
     //clave que se envia al usuario
     let clave = this.servicioClaves.crearClaveAleatoria();
-
+    console.log(clave)
     //clave cifrada, la que se almacena en la db
     let claveCifrada = this.servicioClaves.CifrarTexto(clave);
-    console.log(clave)
+
     usuario.clave = claveCifrada;
     let usuarioCreado = await this.usuarioRepository.create(usuario);
     if(usuarioCreado){
-      //Enviar clave por correo electronico
+      let datos = new NotificacionCorreo();
+      datos.destinatario = usuario.correo;
+      datos.asunto = configuracion.asuntoCreacionUsuario;
+      datos.mensaje = `${configuracion.saludo} ${usuario.nombre} <br />${configuracion.mensajeCreacionUsuario}${clave}`;
+      this.servicioNotificaciones.EnviarCorreo(datos);
     }
     return usuarioCreado;
   }
@@ -186,6 +193,7 @@ export class UsuarioController {
       }
     });
     if(usuario){
+      usuario.clave = "";
       // generar token y agregarlo a la respuesta
     }
     return usuario;
@@ -202,19 +210,24 @@ export class UsuarioController {
       content: {
         'application/json': {
           schema: getModelSchemaRef(CambioClave, {
-            title: 'cambio de clave de usuarios'
+            title: 'Cambio de clave del Usuario'
           }),
         },
       },
     })
     credencialesClave: CambioClave,
-  ): Promise<boolean> {
-    let respuesta = await this.servicioClaves.cambiarClave(credencialesClave);
-    if (respuesta) {
-      //Invocar al servicio de notificaciones para enviar correo al usuario
+  ): Promise<Boolean> {
+    let usuario = await this.servicioClaves.CambiarClave(credencialesClave);
+    if (usuario) {
+      let datos = new NotificacionCorreo();
+      datos.destinatario = usuario.correo;
+      datos.asunto = configuracion.asuntoCambioClave;
+      datos.mensaje = `${configuracion.saludo} ${usuario.nombre} <br />${configuracion.mensajeCambioClave}`;
+      this.servicioNotificaciones.EnviarCorreo(datos);
+
     }
-    return respuesta;
-}
+    return usuario != null;
+  }
 
   @post('/recuperar-clave')
   @response(200, {

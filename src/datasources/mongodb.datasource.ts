@@ -9,7 +9,7 @@ const config = {
   port: 27017,
   user: '',
   password: '',
-  database: 'e-commerce_db',
+  database: 'usuarios_e-commerce_db',
   useNewUrlParser: true
 };
 

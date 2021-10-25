@@ -16,21 +16,20 @@ export class AdministradorClavesService {
   /*
    * Add service methods here
    */
-  async cambiarClave(credencialesClave: CambioClave): Promise<boolean>{
+  async CambiarClave(credencialesClave: CambioClave): Promise<Usuario | null> {
     let usuario = await this.usuarioRepository.findOne({
       where: {
         _id: credencialesClave.id_usuario,
         clave: credencialesClave.clave_actual
       }
     });
-    if(usuario){
+    if (usuario) {
       usuario.clave = credencialesClave.nueva_clave;
-      await this.usuarioRepository.updateById(credencialesClave.id_usuario,usuario);
-      return true;
+      await this.usuarioRepository.updateById(credencialesClave.id_usuario, usuario)
+      return usuario;
+    } else {
+      return null;
     }
-     else {
-    return false;
-  }
   }
 
   async RecuperarClave(correo: string): Promise<Usuario | null>{
