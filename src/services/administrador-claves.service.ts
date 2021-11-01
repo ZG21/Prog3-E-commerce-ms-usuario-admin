@@ -2,6 +2,7 @@ import { /* inject, */ BindingScope, injectable} from '@loopback/core';
 import {repository} from '@loopback/repository';
 import {Usuario} from '../models';
 import {CambioClave} from '../models/cambio-clave.model';
+import {CredencialesRecuperarClave} from '../models/credenciales-recuperar-clave.model';
 import {UsuarioRepository} from '../repositories';
 const generator = require('generate-password');
 var CryptoJS = require("crypto-js");
@@ -32,10 +33,10 @@ export class AdministradorClavesService {
     }
   }
 
-  async RecuperarClave(correo: string): Promise<Usuario | null>{
+  async RecuperarClave(credenciales: CredencialesRecuperarClave): Promise<Usuario | null>{
     let usuario = await this.usuarioRepository.findOne({
       where: {
-        correo: correo
+        correo: credenciales.correo
       }
     });
     if(usuario){
