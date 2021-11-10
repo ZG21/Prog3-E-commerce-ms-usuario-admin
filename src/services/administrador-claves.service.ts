@@ -33,21 +33,6 @@ export class AdministradorClavesService {
     }
   }
 
-  async RecuperarClave(credenciales: CredencialesRecuperarClave): Promise<Usuario | null>{
-    let usuario = await this.usuarioRepository.findOne({
-      where: {
-        correo: credenciales.correo
-      }
-    });
-    if(usuario){
-      let clave = this.crearClaveAleatoria();
-      usuario.clave = this.CifrarTexto(clave);
-      await this.usuarioRepository.updateById(usuario._id, usuario);
-      return usuario;
-    } else {
-    return null;
-  }
-  }
 
   crearClaveAleatoria(){
     let password = generator.generate({
